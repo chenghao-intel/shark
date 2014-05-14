@@ -52,8 +52,12 @@ public class SetWritable {
     }
     
     public static final Text build(Text w, String v) {
-        w.set(v);
-        return w;
+        if(v == null) {
+        	return null;
+        } else {
+          w.set(v);
+          return w;
+        }
     }
     
     public static final ShortWritable build(ShortWritable w, short v) {
@@ -81,8 +85,12 @@ public class SetWritable {
         return w;
     }
     public static final TimestampWritable build(TimestampWritable w, Timestamp v) {
-        w.set(v);
-        return w;
+        if(v == null) {
+        	return null;
+        } else {
+          w.set(v);
+          return w;
+        }
     }
 }
 

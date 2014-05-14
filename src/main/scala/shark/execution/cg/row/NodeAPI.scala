@@ -149,6 +149,61 @@ abstract class TreeNode[BaseType <: TreeNode[BaseType]] {
 
   /** Returns a Seq of the children of this node */
   def children: Seq[BaseType]
+  
+    /**
+   * The arguments that should be included in the arg string.  Defaults to the `productIterator`.
+   */
+  protected def stringArgs = productIterator
+
+  /** Returns a string representing the arguments to this node, minus any children */
+  def argString: String = productIterator.flatMap {
+    case tn: TreeNode[_] if children contains tn => Nil
+    case tn: TreeNode[_] if tn.toString contains "\n" => s"(${tn.simpleString})" :: Nil
+    case seq: Seq[_] => seq.mkString("[", ",", "]") :: Nil
+    case set: Set[_] => set.mkString("{", ",", "}") :: Nil
+    case other => other :: Nil
+  }.mkString(", ")
+
+  def nodeName = getClass.getSimpleName
+
+  /** String representation of this node without any children */
+  def simpleString = s"$nodeName $argString"
+
+  override def toString: String = treeString
+
+  /** Returns a string representation of the nodes in this tree */
+  def treeString = generateTreeString(0, new StringBuilder).toString
+
+  /**
+   * Returns a string representation of the nodes in this tree, where each operator is numbered.
+   * The numbers can be used with [[trees.TreeNode.apply apply]] to easily access specific subtrees.
+   */
+  def numberedTreeString =
+    treeString.split("\n").zipWithIndex.map { case (line, i) => f"$i%02d $line" }.mkString("\n")
+
+  /** Appends the string represent of this node and its children to the given StringBuilder. */
+  protected def generateTreeString(depth: Int, builder: StringBuilder): StringBuilder = {
+    builder.append(" " * depth)
+    builder.append(simpleString)
+    builder.append("\n")
+    children.foreach(_.generateTreeString(depth + 1, builder))
+    builder
+  }
+
+  /**
+   * Returns a 'scala code' representation of this `TreeNode` and its children.  Intended for use
+   * when debugging where the prettier toString function is obfuscating the actual structure. In the
+   * case of 'pure' `TreeNodes` that only contain primitives and other TreeNodes, the result can be
+   * pasted in the REPL to build an equivalent Tree.
+   */
+  def asCode: String = {
+    val args = productIterator.map {
+      case tn: TreeNode[_] => tn.asCode
+      case s: String => "\"" + s + "\""
+      case other => other.toString
+    }
+    s"$nodeName(${args.mkString(",")})"
+  }
 }
 
 /**
